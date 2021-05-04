@@ -46,7 +46,6 @@ def scoring(nuc_parent, nuc_progeny):
 
 
 def get_score_array(parent, progeny):
-    # This creates an array of zeroes that we will use to add up the scores
     ########################################### Stuff here is for testing purposes
     # partial_parents = np.zeros((len(parent), 3), dtype=str)
     # for i in range(3):
@@ -59,6 +58,7 @@ def get_score_array(parent, progeny):
     # parent = partial_parents
     # progeny = partial_progeny
     #########################################
+    # This creates an array of zeroes that we will use to add up the scores
     scoreCols = len(parent[0])
     scoreRows = len(progeny[0])
     score_array = np.zeros((scoreRows, scoreCols), dtype=int)
@@ -83,17 +83,25 @@ def get_score_array(parent, progeny):
                 nuc_progeny = progeny[snp_site][progeny_idv]
                 # print(snp_site, progeny_idv, "progeny site") # For sanity check
                 # nuc_proj_array[snp_site][progeny_idv] = nuc_progeny
+                # If there are any Ns or the parents are heterozygous no points added to max score
                 if nuc_progeny != "N" and nuc_parent != "N":
+                    # if nuc_parent == "A" or nuc_parent == "C" or nuc_parent == "G" or nuc_parent == "T":
+                    #     if nuc_progeny == "A" or nuc_progeny == "C" or nuc_progeny == "G" or nuc_progeny == "T":
                     x = scoring(nuc_parent, nuc_progeny)
                     max_score_array[progeny_idv][parent_idv] += 1
                     score_array[progeny_idv][parent_idv] += x
         # input("Press Enter to continue...") # For sanity check
+    print("Score Array")
     print(score_array)
     # Max score array will nto differ within a progeny because there are no Ns in parents
     norm_score_array = np.divide(score_array, max_score_array)
+    print("Normal Score Array")
     print(norm_score_array)
+    print("Max Score Array")
+    print(max_score_array)
     # print(nuc_proj_array) # For sanity check
     # print(nuc_parent_array) # For Sanity check
+    # Saving stuff to files to later use in R
     np.savetxt("/home/drt83172/Documents/Tall_fescue/Genotype_Data/2021_01_22_FescueFlexSeqGenos/Filtered_data"
                "/parent_progeny_score_table_normalized.txt", norm_score_array)
     np.savetxt("/home/drt83172/Documents/Tall_fescue/Genotype_Data/2021_01_22_FescueFlexSeqGenos/Filtered_data"

@@ -103,8 +103,7 @@ MakeHis <- function(parent_name){
     xlim(.6, 1) + ylim(0, 1800)
   return(plot1)
 }
-ggplot(Scores2, aes_(x=as.name(Parent))) + geom_histogram(binwidth=.01)  + geom_histogram(data = KnownParent, fill = "darkblue", binwidth=.01)+ theme_bw() +
-  xlim(.6, 1) + ylim(-1, 1800) 
+
 i=0
 x = 301
 for (i in 2:18){
@@ -118,8 +117,7 @@ for (i in 2:18){
     x = x+2}
 }
 
-KnownParent[, i]
-KnownParent[,19]
+
 # Density plot showing all parents with their respective scores, interesting to see peak scores of all parents
 ggplot(Scores3, aes_(x=as.name('value'), colour=as.name('variable'))) + geom_density() + theme_bw()
 # Using standard deviations away from the mean
