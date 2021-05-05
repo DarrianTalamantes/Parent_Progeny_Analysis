@@ -13,6 +13,8 @@ Scores_not_normal <- read.table ("/home/drt83172/Documents/Tall_fescue/Genotype_
 max_scores <- read.table ("/home/drt83172/Documents/Tall_fescue/Genotype_Data/2021_01_22_FescueFlexSeqGenos/Filtered_data/max_scores.txt", sep = " ")
 Parents_Percent_Heterozygous <- read.table ("/home/drt83172/Documents/Tall_fescue/Genotype_Data/2021_01_22_FescueFlexSeqGenos/Filtered_data/Parents_Percent_Heterozygous.txt", sep = "\t", header = TRUE)
 parent_progeny_key <- read.table ("/home/drt83172/Documents/Tall_fescue/parent_projeny.txt", sep = "\t", header = FALSE)
+Parents_Percent_Heterozygous <- read.table ("/home/drt83172/Documents/Tall_fescue/Genotype_Data/2021_01_22_FescueFlexSeqGenos/Filtered_data/Parents_Percent_Heterozygous.txt", sep = "\t", header = TRUE)
+Progeny_numerical <- read.table ("/home/drt83172/Documents/Tall_fescue/Genotype_Data/2021_01_22_FescueFlexSeqGenos/Filtered_data/DeleteMe.txt", sep = "\t", header = TRUE, row.names = 1)
 
 
 #Fixing up the name data to just have the names and not other stuff
@@ -81,9 +83,14 @@ parent_progeny_key <- subset(parent_progeny_key, select = -c(V1))
 
 # Adding key  to data that may need it
 Scores2 <- merge(Scores2,parent_progeny_key, by.x = "Progeny", by.y = 0)
+Progeny_numerical <- merge(Progeny_numerical,parent_progeny_key, by.x = 0, by.y = 0)
+new_row_names <- Progeny_numerical[, "Row.names"]
+rownames(Progeny_numerical) <- new_row_names
+Progeny_numerical <- subset(Progeny_numerical, select = -c(Row.names))
+Progeny_numerical <- Progeny_numerical %>% rename(Maternal_Parent = V2)
 
 
-###########################################  Plots 
+######################################################################################################################  Plots 
 # Scatter plot of all progeny. this works but the plots will not apper if made in the loop
 MakeScatter <- function(parent_name){
   plot1 <- ggplot(Scores2, aes_(x=as.name('Progeny'), y=as.name(parent_name))) + geom_point(shape=1)
@@ -181,6 +188,14 @@ lm_eqn <- function(df){
 ggplot(Parent_Data, aes_(x=as.name('Mean_Score'), y=as.name('Proportion.Heterozygous'))) + geom_point(size = 5) +
   theme_bw() + geom_text(aes(label=Parent),hjust=0, vjust=0) + 
   geom_text(x = .97, y = .48, label = lm_eqn(Parent_Data), parse = TRUE)
+
+# Anova testing
+#for (x in 1:dim(Progeny_numerical)[2]){
+one.way <- aov(SNODE_10046_LENGTH_6961_COV_4.925189_1111 ~ Maternal_Parent, data = Progeny_numerical)
+#}
+summary(one.way)
+plot(one.way)
+
 
 
 
