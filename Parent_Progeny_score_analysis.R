@@ -5,6 +5,7 @@ library(reshape2)
 library(tidyverse)
 library(vegan)
 library(Rfast)
+library(car)
 
 Flex_hmp_names <- read.table ("/home/drt83172/Documents/Tall_fescue/Genotype_Data/2021_01_22_FescueFlexSeqGenos/Filtered_data/progeny_hmp_names.txt", sep = "\t")
 Parent_hmp_names <- read.table ("/home/drt83172/Documents/Tall_fescue/Genotype_Data/2021_01_22_FescueFlexSeqGenos/Filtered_data/parent_hmp_names_clean.txt", sep = "\t")
@@ -14,7 +15,7 @@ max_scores <- read.table ("/home/drt83172/Documents/Tall_fescue/Genotype_Data/20
 Parents_Percent_Heterozygous <- read.table ("/home/drt83172/Documents/Tall_fescue/Genotype_Data/2021_01_22_FescueFlexSeqGenos/Filtered_data/Parents_Percent_Heterozygous.txt", sep = "\t", header = TRUE)
 parent_progeny_key <- read.table ("/home/drt83172/Documents/Tall_fescue/parent_projeny.txt", sep = "\t", header = FALSE)
 Parents_Percent_Heterozygous <- read.table ("/home/drt83172/Documents/Tall_fescue/Genotype_Data/2021_01_22_FescueFlexSeqGenos/Filtered_data/Parents_Percent_Heterozygous.txt", sep = "\t", header = TRUE)
-Progeny_numerical <- read.table ("/home/drt83172/Documents/Tall_fescue/Genotype_Data/2021_01_22_FescueFlexSeqGenos/Filtered_data/DeleteMe.txt", sep = "\t", header = TRUE, row.names = 1)
+Progeny_numerical <- read.table ("/home/drt83172/Documents/Tall_fescue/Genotype_Data/2021_01_22_FescueFlexSeqGenos/Filtered_data/FlexSeq_numerical_forR.txt", sep = "\t", header = TRUE, row.names = 1)
 
 
 #Fixing up the name data to just have the names and not other stuff
@@ -91,7 +92,7 @@ Progeny_numerical <- Progeny_numerical %>% rename(Maternal_Parent = V2)
 
 
 ######################################################################################################################  Plots 
-# Scatter plot of all progeny. this works but the plots will not apper if made in the loop
+# Scatter plot of all progeny
 MakeScatter <- function(parent_name){
   plot1 <- ggplot(Scores2, aes_(x=as.name('Progeny'), y=as.name(parent_name))) + geom_point(shape=1)
   return(plot1)
@@ -189,14 +190,41 @@ ggplot(Parent_Data, aes_(x=as.name('Mean_Score'), y=as.name('Proportion.Heterozy
   theme_bw() + geom_text(aes(label=Parent),hjust=0, vjust=0) + 
   geom_text(x = .97, y = .48, label = lm_eqn(Parent_Data), parse = TRUE)
 
-# Anova testing
-#for (x in 1:dim(Progeny_numerical)[2]){
-one.way <- aov(SNODE_10046_LENGTH_6961_COV_4.925189_1111 ~ Maternal_Parent, data = Progeny_numerical)
-#}
+# Anova testing for one site with all assumption tests
+one.way <- aov(SNODE_12045_LENGTH_6526_COV_2.952241_4753 ~ Maternal_Parent, data = Progeny_numerical)
 summary(one.way)
-plot(one.way)
+summary(one.way)[[1]][["Pr(>F)"]][[1]]
+plot(one.way, 1) #plots residuals and fitted value means.
+plot(one.way, 2) #checking if residuals are normally distributed.
+aov_residuals <- residuals(object = one.way )
+shapiro.test(x = aov_residuals ) #Shapiro-Wilk test, if p is less than .05 population not normally distributed. Can be okay if failed
+Progeny_numerical$Maternal_Parent <- as.factor(Progeny_numerical$Maternal_Parent)
+leveneTest(SNODE_10046_LENGTH_6961_COV_4.925189_1111 ~ Maternal_Parent, data = Progeny_numerical) # testing if their is variation between maternal parents. 
+
+# Anova testing loop for all sites
+p_values <- data.frame(matrix(ncol = 2, nrow = 1214))
+p_values <- p_values %>% 
+  rename(
+    Site = X1,
+    P_Value = X2
+    )
+
+for (x in 1 : (dim(Progeny_numerical)[[2]]-1)){
+  one.way <- aov(Progeny_numerical[[x]] ~ Maternal_Parent, data = Progeny_numerical)
+  p_values[x,2] <- summary(one.way)[[1]][["Pr(>F)"]][[1]]
+  p_values[x,1] <- colnames(Progeny_numerical)[[x]]
+}
+p_values <- p_values[order(p_values$P_Value),]
+write.table(p_values, file = "/home/drt83172/Documents/Tall_fescue/Genotype_Data/2021_01_22_FescueFlexSeqGenos/Misc_Files/List_of_sites_and_Pvalues.txt")
 
 
+
+
+
+
+# Scatter plot of numerical genotypes by a single site 
+ggplot(Progeny_numerical, aes_(x=as.name('Maternal_Parent'), y=as.name('SNODE_10046_LENGTH_6961_COV_4.925189_1111'))) + geom_point(size = 5, color = "blue", alpha = .008) +
+  theme_bw() 
 
 
 

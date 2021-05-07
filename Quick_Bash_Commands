@@ -1,0 +1,4 @@
+#bin/bash
+#This command is run after I ran an anova on all the sites to see if any sites are better than others for discriminating between the progeny when their parents are known.
+head List_of_sites_and_Pvalues.txt -n 300 | cut -d " " -f 2 | sed 1d > Top_300_sites.txt
+
